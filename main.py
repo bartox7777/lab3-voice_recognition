@@ -7,12 +7,20 @@ FILES = [f"dane/{file}" for file in FILES]
 
 dataframes = [pd.read_csv(file) for file in FILES]
 
+# First plot
+plt.subplot(1, 2, 1)
 for df in dataframes:
-    plt.plot(df["effort"], df.iloc[:, 2:].mean(axis=1))
-
-
-plt.xlabel("Rozegranych gier")
-plt.ylabel("Odsetek wygranych gier")
-plt.plot()
+    plt.plot(df["effort"]/1000, df.iloc[:, 2:].mean(axis=1)*100)
+plt.xlabel(r"Rozegranych gier ($\times$ 1000)")
+plt.ylabel(r"Odsetek wygranych gier ($\%$)")
 plt.legend(ALGS)
+
+# Second plot
+plt.subplot(1, 2, 2)
+for df in dataframes:
+    plt.plot(df["effort"], df.iloc[:, 2:].max(axis=1))
+plt.xlabel("Rozegranych gier")
+plt.ylabel("Maksymalny odsetek wygranych gier")
+plt.legend(ALGS)
+
 plt.show()
