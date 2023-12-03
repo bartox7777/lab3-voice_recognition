@@ -1,0 +1,45 @@
+\documentclass[11pt]{article}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb,amsfonts,amsthm}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{geometry}
+\geometry{legalpaper, margin=1in}
+\usepackage{graphicx}
+
+\title{KCK - Przetwarzanie sygnałów - rozpoznawanie płci}
+\author{Bartosz Żelek 151860}
+
+\begin{document}
+
+\maketitle
+\section{Opis programu}
+W stworzonym programie zdecydowałem się na metodę analizy cepstrum.
+Program rozpoczyna się od wczytania pliku z sygnałem.
+Jeżeli sygnał posiada więcej niż jeden kanał, to wybierany jest pierwszy z nich.
+Na danych z wybranego kanału wykonywana jest funkcja \begin{verbatim}medfilt(data, 3)\end{verbatim} w celu usunięcia szumów.
+Przed przejściem z dziedziny czasu do dziedziny częstotliwości, sygnał zostaje przemnożony przez okno Flat Top w celu zminimalizowania efektu wycieku widma (zniekształcenia widma) oraz obliczane są częstotliwości, ponieważ sama operacja transformacji Fouriera zwraca zbiór liczb zespolonych, które same w sobie nie reprezentują określonych częstotliwości.
+Następnie wykonywana jest transformacja Fouriera na przefiltrowanym sygnale i tym samym otrzymywane jest spektrum.
+Aby otrzymać cepstrum, należy wykonać transformację Fouriera na logarytmie z modułu spektrum.
+W celu wyznaczenia częstotliwości dla cepstrum ponownie wykorzystujemy funkcję \begin{verbatim}cepstrum_freqs = np.fft.fftfreq(len(log_spectrum), (freqs1-freqs[0]))\end{verbatim} - jej pierwszym argumentem jest liczba punktów w cepstrum, a w drugim różnica między kolejnymi częstotliwościami dla spektrum - rozdzielczość częstotliwości.
+Następnie określany jest zakres częstotliwości, dla których szukamy maksimum. Tu zdecydowałem się na zakres od 50 Hz do 300 Hz (zakres większy niż standardowo generowany przez człowieka podczas mówienia).
+Wybierane są indeksy odpowiadające tym częstotliwościom, a następnie wybierane są wartości cepstrum dla tych indeksów.
+Z tych wartości wybierane jest maksimum.
+Aby otrzymać częstotliwość podstawową, należy odwrócić otrzymaną wartość.
+W celu wyznaczenia płci, należy porównać otrzymaną częstotliwość podstawową z wartością graniczną 170 Hz. Jeżeli otrzymana wartość jest mniejsza niż 170 Hz, to sygnał należy zaklasyfikować jako męski, w przeciwnym wypadku jako żeński.
+\section{Uwagi}
+Niektóre mechanizmy i wartości użyte w programie zostały wybrane drogą eksperymentalną.
+Do nich należą:
+\begin{itemize}
+    \item Wartość 3 w funkcji \begin{verbatim}medfilt(data, 3)\end{verbatim} - wartość ta została wybrana w celu usunięcia szumów z sygnału, ale nie wpływania na jego kształt. Istnieją inne metody usuwania szumów, ale ta wydawała mi się najprostsza i najbardziej efektywna.
+    \item Testowałem różne okna: Hamminga, Hanninga, Bartletta, Blackmana, Parzena, Bohmana, Blackmana-Harrisa, …, ale okno Flat Top dawało najlepsze rezultaty na danych testowych.
+    \item Bez mechanizmu odszumiania okno Flat Top nie dawało najlepszych rezultatów (lepsze rezultaty dawało np. okno Blackmana).
+    \item Rozszerzenie zakresu częstotliwości dla którego szukamy maksimum w cepstrum z 85-255 Hz do 50-300 Hz zmniejszyło błąd klasyfikacji.
+    \item Wartość graniczna 170 Hz została wybrana drogą eksperymentalną. Iteracyjnie sprawdzałem wartości od 140 Hz do 200 Hz i znalazłem lokalne minimum błędu klasyfikacji.
+\end{itemize}
+
+
+\end{document}
