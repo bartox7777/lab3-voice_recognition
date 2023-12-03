@@ -1,84 +1,71 @@
-
-
-
+import warnings
+warnings.simplefilter("ignore")
 
 import scipy.io.wavfile as wav
-import matplotlib.pyplot as plt
 import scipy
 import numpy as np
-import os
+import sys
 from scipy.signal import medfilt
-from scipy.signal import wiener
-from scipy.signal import butter
 
 # rozpoznanie płci osoby mówiącej metodą cepstralną
-
-
 
 good = 0
 bad = 0
 
-M = []
-K = []
+try:
+    file = sys.argv[1]
+except:
+    print("Podaj nazwę pliku w pierwszym argumencie")
+    exit(-1)
 
-for file in os.listdir("train"):
-    fs, data = wav.read(f'train/{file}') # wczytanie pliku
+fs, data = wav.read(file) # wczytanie pliku
 
-    if len(data.shape) > 1:
-        data = data[:, 0] # jeśli plik jest stereo, to bierzemy tylko jeden kanał
+if len(data.shape) > 1:
+    data = data[:, 0] # jeśli plik jest stereo, to bierzemy tylko jeden kanał
+
+try:    
+    data = medfilt(data, 3) # filtr medianowy
+except:
+    pass
     
-    try:    
-        data = medfilt(data, 3)
-    except:
-        pass
-        
-    freqs = np.fft.fftfreq(len(data), 1/fs)  # obliczenie częstotliwości
-        
-    window = scipy.signal.windows.blackman(len(data)) # okno blackmana
-
-    data = data * window # zastosowanie okna
-
-    spectrum = np.fft.fft(data) # obliczenie spektrum
-
-    log_spectrum = np.log(np.abs(spectrum)) # logarytmowanie
-
-    cepstrum = np.abs(np.fft.fft(log_spectrum)) # obliczenie cepstrum
-
-    cepstrum_freqs = np.fft.fftfreq(len(log_spectrum), (freqs[1]-freqs[0])) # obliczenie częstotliwości cepstrum
-
-    human_freqs_range = (50, 300)
-
-    limited_cepstrum_freqs = (cepstrum_freqs > 1/human_freqs_range[1]) & (cepstrum_freqs <= 1/human_freqs_range[0]) # ograniczenie zakresu częstotliwości
-
-    peak_idx = np.argmax(cepstrum[limited_cepstrum_freqs]) # znalezienie indeksu największej wartości w ograniczonym zakresie
-
-    peak_freq = 1/cepstrum_freqs[limited_cepstrum_freqs][peak_idx] # znalezienie częstotliwości odpowiadającej indeksowi
+freqs = np.fft.fftfreq(len(data), 1/fs)  # obliczenie częstotliwości
     
-    real_gender = file.split(".")[0][-1]
-    
-    if peak_freq <= 170:
-        detected_gender = "M"
-    else:
-        detected_gender = "K"
-    
-    if real_gender == detected_gender:
-        good += 1
-    else:
-        bad += 1
-        
-    if real_gender == "K":
-        K.append(peak_freq)
-    else:
-        M.append(peak_freq)
-    
-    # print(f"{file}: {peak_freq}") # wypisanie częstotliwości
-    
-# print(f"mediana, srednia K: {np.median(K)} {np.mean(K)}")
-# print(f"mediana, srednia M: {np.median(M)} {np.mean(M)}")
+window = scipy.signal.windows.blackman(len(data)) # okno blackmana
+
+data = data * window # zastosowanie okna
+
+spectrum = np.fft.fft(data) # obliczenie spektrum
+
+log_spectrum = np.log(np.abs(spectrum)) # logarytmowanie
+
+cepstrum = np.abs(np.fft.fft(log_spectrum)) # obliczenie cepstrum
+
+cepstrum_freqs = np.fft.fftfreq(len(log_spectrum), (freqs[1]-freqs[0])) # obliczenie częstotliwości cepstrum
+
+human_freqs_range = (50, 300)
+
+limited_cepstrum_freqs = (cepstrum_freqs > 1/human_freqs_range[1]) & (cepstrum_freqs <= 1/human_freqs_range[0]) # ograniczenie zakresu częstotliwości
+
+peak_idx = np.argmax(cepstrum[limited_cepstrum_freqs]) # znalezienie indeksu największej wartości w ograniczonym zakresie
+
+peak_freq = 1/cepstrum_freqs[limited_cepstrum_freqs][peak_idx] # znalezienie częstotliwości odpowiadającej indeksowi
+
+real_gender = file.split(".")[0][-1]
+
+if peak_freq <= 170:
+    detected_gender = "M"
+else:
+    detected_gender = "K"
+
+if real_gender == detected_gender:
+    good += 1
+else:
+    bad += 1
     
 
 print(good)
 print(bad)
+print(detected_gender)
 
 ##########
 
