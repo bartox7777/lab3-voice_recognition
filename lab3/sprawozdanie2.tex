@@ -40,6 +40,20 @@ Do nich należą:
     \item Rozszerzenie zakresu częstotliwości dla którego szukamy maksimum w cepstrum z 85-255 Hz do 50-300 Hz zmniejszyło błąd klasyfikacji.
     \item Wartość graniczna 170 Hz została wybrana drogą eksperymentalną. Iteracyjnie sprawdzałem wartości od 140 Hz do 200 Hz i znalazłem lokalne minimum błędu klasyfikacji.
 \end{itemize}
+\section {Wyniki}
+Dla 91 danych testowych poprawnie zaklasyfikowano 83, co daje błąd klasyfikacji na poziomie 8.79\%.\\
+Macierz pomyłek:
+\begin{center}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        & M & K \\
+        \hline
+        M & 40 & 5 \\
+        \hline
+        K & 3 & 43 \\
+        \hline
+    \end{tabular}
+\end{center}
 
 
 \end{document}
